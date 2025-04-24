@@ -2,7 +2,7 @@ spring:
   application:
     name: traffic-analysis
   datasource:
-    url: jdbc:mysql://localhost:3306/traffic_db
+    url: jdbc:mysql://localhost:3306/traffic_db?allowPublicKeyRetrieval=true&useSSL=false
     username: root
     password: yourpassword
     driver-class-name: com.mysql.cj.jdbc.Driver

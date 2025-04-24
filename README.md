@@ -27,9 +27,40 @@ graph TD
 # 克隆仓库
 git clone https://github.com/your-repo/traffic-analysis.git
 cd traffic-analysis
+          
+要在Docker中部署MySQL，你可以按照以下步骤进行操作：
 
-# 初始化数据库（确保已安装MySQL客户端）
-mysql -u root -p < init_db.sql
+1. 首先，确保你的系统已经安装了Docker。如果没有安装，可以使用以下命令进行安装：
+
+```bash
+brew install docker
+```
+
+2. 拉取MySQL的Docker镜像：
+```bash
+docker pull mysql:latest
+```
+
+3. 运行MySQL容器：
+```bash
+docker run --name mysql-container -e MYSQL_ROOT_PASSWORD=yourpassword -d -p 3306:3306 mysql:latest
+```
+其中，`yourpassword`是你设置的MySQL root用户的密码。
+
+4. 验证MySQL容器是否成功运行：
+```bash
+docker ps
+```
+你应该能看到一个名为`mysql-container`的容器正在运行。
+
+5. 连接到MySQL容器：
+```bash
+docker exec -it mysql-container mysql -uroot -p
+```
+输入你设置的密码后，你将进入MySQL命令行界面。
+
+通过这些步骤，你就可以在Docker中成功部署并运行MySQL了。
+
 
 # 编译项目
 mvn clean package

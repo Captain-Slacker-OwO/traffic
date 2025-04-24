@@ -9,14 +9,15 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 public class TrafficFlow {
-    public TrafficFlow(String intersectionId, LocalDate date, int vehicleCount) {
+    private String intersectionId;
+    private LocalDateTime timestamp;  // 修改为LocalDateTime
+    private int vehicleCount;
+    
+    public TrafficFlow(String intersectionId, LocalDateTime timestamp, int vehicleCount) {
         this.intersectionId = intersectionId;
-        this.timestamp = date.atStartOfDay();
+        this.timestamp = timestamp;
         this.vehicleCount = vehicleCount;
     }
-    private String intersectionId;
-    private LocalDateTime timestamp;
-    private int vehicleCount;
     private double averageSpeed;
     private String trafficStatus;
 }
