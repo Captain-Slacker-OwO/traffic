@@ -1,6 +1,6 @@
 # Maven 构建目录
 target/
-  
+node_modules/
 # IDE配置
 .idea/
 *.iml
