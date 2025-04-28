@@ -1,121 +1,199 @@
-# 智能交通流量分析系统
+# 智能交通流量分析系统配置与运行指南（v1.2）
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+## 一、项目架构总览
+![系统架构图](https://via.placeholder.com/800x400.png?text=System+Architecture)
 
-## 项目概述
-实时交通流量监控与预测系统，整合多源数据实现：
-- 🚥 实时交通状态可视化
-- 📈 基于机器学习的流量预测
-- 🔄 30秒自动刷新机制
-- 🛡️ 服务熔断保护（错误率>50%自动熔断）
+### 1.1 技术栈组成
+- **前端展示层**：React 18 + Chart.js 3.7
+- **业务逻辑层**：Spring Boot 2.7 + JPA 
+- **数据预测层**：Python 3.9 + Prophet 1.1
+- **数据存储层**：MySQL 8.0 + Redis 6.2
+- **基础设施层**：Docker 20.10 + Nginx 1.21
 
-## 功能特性
-### 核心功能
-- 📊 双图表展示（折线图+饼图）
-- 🕒 历史数据回溯（最大30天）
-- 🔮 15分钟流量预测
-- ⚡ 异常状态自动告警
-
-### 系统特性
+### 1.2 目录结构解析
 ```bash
-每秒处理能力：200+请求
-预测准确率：85%~92%
-最大延迟：<500ms
+traffic/
+├── frontend/              # 前端工程
+│   ├── public/           # 静态资源
+│   └── src/              # 源码目录
+│       ├── components/   # 可视化组件
+│       └── services/     # API服务层
+├── src/                  # 后端工程
+│   └── main/
+│       ├── java/         # 业务逻辑
+│       └── resources/    # 配置文件
+├── prediction_service/    # 预测服务
+└── docker/               # 容器配置
 ```
 
-## 技术架构
-![](https://via.placeholder.com/800x400?text=Architecture+Diagram)
+## 二、环境准备（macOS）
 
-## 快速启动
-### 依赖安装
+### 2.1 基础依赖安装
 ```bash
-# 后端依赖
-mvn clean install
+# 安装Homebrew
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# 前端依赖
-cd frontend && npm ci
+# 安装JDK17
+brew install openjdk@17
 
-# 预测服务
-cd prediction_service && pip install -r requirements.txt
+# 安装Node.js 18.x
+brew install node@18
+
+# 安装Python 3.9
+brew install python@3.9
+
+# 安装Docker Desktop
+brew install --cask docker
 ```
 
-### 数据库初始化
+### 2.2 数据库配置
+1. 启动MySQL容器
 ```bash
-mysql -u root -p < init_db.sql
+docker run --name traffic-mysql -e MYSQL_ROOT_PASSWORD=yourpassword -p 3306:3306 -d mysql:8.0
 ```
 
-## 配置指南
-`.env.production` 配置示例：
+2. 初始化数据库
+```bash
+mysql -h 127.0.0.1 -u root -p < init_db.sh
+```
+
+## 三、配置文件详解
+
+### 3.1 后端配置（application.properties）
 ```properties
+# 服务端口
+server.port=8080
+
 # 数据库配置
-DB_POOL_SIZE=20
-DB_CONN_TIMEOUT=3000
+spring.datasource.url=jdbc:mysql://localhost:3306/traffic_db
+spring.datasource.username=root
+spring.datasource.password=yourpassword
 
-# 预测服务
-PREDICTION_WINDOW=15m
+# 数据模拟参数
+traffic.simulation.interval=5000
+traffic.base-pattern=50,30,20,15,20,40,60,80,100,120,110,100
 ```
 
-## API文档
-### 实时数据接口
-`GET /api/traffic/current`
+### 3.2 前端配置（.env.development）
+```env
+REACT_APP_API_BASE=http://localhost:8080/api
+REACT_APP_UPDATE_INTERVAL=30
+```
+
+### 3.3 预测服务配置（config.ini）
+```ini
+[model]
+prophet_seasonality_mode=multiplicative
+prediction_horizon=24
+```
+
+## 四、数据库初始化
+
+### 4.1 表结构说明
+```sql
+CREATE TABLE traffic_flow (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  intersection_id VARCHAR(50) NOT NULL,
+  timestamp DATETIME NOT NULL,
+  vehicle_count INT NOT NULL
+);
+```
+
+### 4.2 数据模拟规则
+- **基准流量**：每小时预设基准值
+- **随机波动**：±15% 正态分布波动
+- **存储频率**：每5秒生成一条记录
+
+## 五、系统启动流程
+
+### 5.1 后端服务启动
+```bash
+# 编译打包
+mvn clean package -DskipTests
+
+# 运行服务
+java -jar target/traffic-0.0.1-SNAPSHOT.jar
+```
+
+### 5.2 前端服务启动
+```bash
+cd frontend
+npm install --legacy-peer-deps
+npm start
+```
+
+### 5.3 预测服务启动
+```bash
+cd prediction_service
+conda create -n traffic-prediction python=3.9
+conda activate traffic-prediction
+pip install -r requirements.txt
+python predict.py
+```
+
+## 六、系统维护与监控
+
+### 6.1 日志查看
+```bash
+# 后端日志
+tail -f /var/log/traffic/traffic.log
+
+# 数据库日志
+docker logs -f traffic-mysql
+```
+
+### 6.2 健康检查接口
 ```http
-GET /api/traffic/current?intersection=intersection_1
+GET http://localhost:8080/actuator/health
 ```
 
-响应示例：
-```json
-{
-  "status": "congested",
-  "vehicleCount": 245,
-  "predictedCount": 260,
-  "updateTime": "2023-07-20T14:30:00Z"
+### 6.3 系统扩展建议
+1. **增加观测点**：修改`intersection_id`参数
+2. **调整预测模型**：修改predict.py中的seasonality参数
+3. **扩展存储能力**：配置Redis缓存层
+
+## 七、常见问题解决方案
+
+### 7.1 端口冲突处理
+```bash
+# 查找占用端口的进程
+lsof -i :8080
+
+# 终止指定进程
+kill -9 <PID>
+```
+
+### 7.2 依赖安装失败处理
+```bash
+# 清理npm缓存
+npm cache clean --force
+
+# 重新安装依赖
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### 7.3 数据不显示排查步骤
+1. 检查数据库连接状态
+2. 验证API接口响应
+3. 查看浏览器控制台报错
+
+## 八、安全配置建议
+
+### 8.1 访问控制策略
+```nginx
+location /api {
+    limit_req zone=api_limit burst=20;
+    proxy_pass http://backend;
 }
 ```
 
-## 项目结构
+### 8.2 数据备份方案
 ```bash
-.
-├── frontend/                 # React前端
-│   ├── public/               # 静态资源
-│   └── src/
-│       ├── components/       # 可视化组件
-│       │   └── TrafficChart.js  # 核心图表组件
-├── src/main/java/            # Spring Boot后端
-│   ├── controller/           # API控制器
-│   ├── service/              # 业务逻辑
-│   └── model/                # 数据实体
-└── prediction_service/       # Python预测服务
-    ├── predict.py            # Prophet预测模型
-    └── requirements.txt      # Python依赖
+# 每日自动备份
+0 2 * * * mysqldump -u root -p yourpassword traffic_db > /backup/traffic_$(date +\%Y\%m\%d).sql
 ```
 
-## 运维指南
-### 日志查看
-```bash
-# 实时日志监控
-tail -f traffic.log | grep -E 'WARN|ERROR'
-```
-
-### 健康检查
-```bash
-curl http://localhost:8080/actuator/health
-```
-
-## 许可证
-MIT License © 2023 智能交通分析团队
-```
-
-主要特点：
-1. 完整覆盖项目核心要素，从安装到运维
-2. 添加系统性能指标和技术架构图占位
-3. 完善API文档包含实际响应格式
-4. 增加运维指南和健康检查命令
-5. 优化目录结构展示关键组件位置
-
-建议后续补充：
-1. 实际系统架构图（替换占位图）
-2. 性能基准测试数据
-3. 典型使用场景示例
-4. 故障排除手册
+> 系统版本要求：macOS Monterey 12.3+
 
         
