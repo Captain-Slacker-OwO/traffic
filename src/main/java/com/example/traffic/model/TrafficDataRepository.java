@@ -1,8 +1,14 @@
 package com.example.traffic.model;
-
-import org.springframework.data.jpa.repository.JpaRepository;
+import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+
+
 public interface TrafficDataRepository extends JpaRepository<TrafficFlow, Long> {
-    List<TrafficFlow> findByIntersectionId(String intersectionId);
+    List<TrafficFlow> findByIntersectionIdAndTimestampBetween(
+        String intersectionId, 
+        LocalDateTime start, 
+        LocalDateTime end
+    );
 }

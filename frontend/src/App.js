@@ -28,7 +28,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/traffic" element={<TrafficChart intersection="1" />} />
+        <Route path="/traffic" element={<TrafficChart intersection="intersection_1" />} />
       </Routes>
     </Router>
   );

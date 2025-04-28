@@ -5,4 +5,6 @@ import java.time.LocalDate;
 
 public interface TrafficDataService {
     List<TrafficFlow> getHourlyData(String intersectionId, LocalDate date);
+    
+    List<TrafficFlow> getRangeData(String intersectionId, LocalDate startDate, LocalDate endDate);
 }

@@ -2,36 +2,51 @@ package com.example.traffic.service.impl;
 
 import com.example.traffic.service.TrafficDataService;
 import com.example.traffic.model.TrafficFlow;
-import com.example.traffic.config.TrafficProperties; // 新增导入
+
 import org.springframework.stereotype.Service;
 import java.util.List;
-import java.util.ArrayList;
+
 import java.time.LocalDate;
-import java.util.Random;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import java.time.ZoneId; // 新增导入
+import java.time.LocalDateTime; // 新增导入
+import com.example.traffic.model.TrafficDataRepository; // 新增导入
+import lombok.extern.slf4j.Slf4j; // 新增导入
+@Slf4j
+
+
 
 @Service
 public class TrafficDataServiceImpl implements TrafficDataService {
     
     @Autowired
-    private TrafficProperties trafficProperties; // 注入配置类
+    private TrafficDataRepository trafficDataRepository; // 注入配置类
 
     @Override
     public List<TrafficFlow> getHourlyData(String intersectionId, LocalDate date) {
-        List<TrafficFlow> mockData = new ArrayList<>();
-        Random rand = new Random();
+        ZoneId zone = ZoneId.of("Asia/Shanghai");
+        // 修正时区转换逻辑
+        LocalDateTime start = date.atStartOfDay().atZone(zone).toLocalDateTime();
+        LocalDateTime end = start.plusDays(1).minusNanos(1);
         
-        for (int hour = 0; hour < 24; hour++) {
-            int base = trafficProperties.getBasePattern()[hour % 12];
-            int fluctuation = trafficProperties.getFluctuation();
-            int vehicleCount = base + rand.nextInt(fluctuation * 2) - fluctuation;
-            
-            mockData.add(new TrafficFlow(
-                intersectionId, 
-                date.atTime(hour, 0), // 修复LocalDateTime转换问题
-                Math.abs(vehicleCount)
-            ));
-        }
-        return mockData;
+        // 添加查询日志
+        log.info("查询条件 - 路口ID: {}, 起始时间: {}, 结束时间: {}", 
+            intersectionId, start, end);
+        
+        return trafficDataRepository.findByIntersectionIdAndTimestampBetween(
+            intersectionId, 
+            start,
+            end
+        );
+    }
+    
+    @Override
+    public List<TrafficFlow> getRangeData(String intersectionId, LocalDate startDate, LocalDate endDate) {
+        ZoneId zone = ZoneId.of("Asia/Shanghai");
+        LocalDateTime start = startDate.atStartOfDay().atZone(zone).toLocalDateTime();
+        LocalDateTime end = endDate.plusDays(1).atStartOfDay().atZone(zone).toLocalDateTime();
+        
+        return trafficDataRepository.findByIntersectionIdAndTimestampBetween(intersectionId, start, end);
     }
 }

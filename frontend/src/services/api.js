@@ -6,19 +6,17 @@ const api = axios.create({
   timeout: 5000
 });
 
-export const fetchTrafficData = async (intersection, date) => {
+export const fetchTrafficData = async (intersection, timeRange) => {
   try {
-    const response = await api.get(`/traffic/history`, {
-      params: {
-        intersection,
-        date: date.toISOString().split('T')[0],
-        page: 0,
-        size: 24
-      }
-    });
+    const params = { 
+      intersectionId: intersection,
+      timeRange: timeRange  // 统一使用timeRange参数
+    };
+    
+    const response = await api.get(`/traffic/history`, { params });
     return response.data;
   } catch (error) {
-    console.error('请求失败:', error); // 替换未定义的showErrorToast
+    console.error('请求失败:', error);
     throw error;
   }
 };
