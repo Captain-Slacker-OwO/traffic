@@ -1,0 +1,11 @@
+flask==2.0.3
+werkzeug==2.0.3  # 保持与flask 2.0.3兼容的版本
+pandas==1.5.3
+prophet==1.1.4
+python-dotenv==0.19.2
+pymysql==1.0.2
+prophet==1.1.4  # 替换fbprophet为官方维护的新版本
+apscheduler==3.10.1
+python-dotenv==0.19.2
+pystan==3.7.0  # 使用兼容的pystan版本
+numpy==1.23.5  # 固定numpy版本以避免兼容性问题
